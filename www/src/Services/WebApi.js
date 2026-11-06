@@ -218,6 +218,7 @@ async function getDisplayOptions() {
 		const response = await Http.get(`${baseUrl}/api/getDisplayOptions`);
 
 		response.data.splashDuration = response.data.splashDuration / 1000; // milliseconds to seconds
+		response.data.splashTextDuration = response.data.splashTextDuration / 1000; // milliseconds to seconds
 		response.data.displaySaverTimeout =
 			response.data.displaySaverTimeout / 60000; // milliseconds to minutes
 
@@ -235,27 +236,20 @@ async function setDisplayOptions(options, isPreview) {
 	newOptions.buttonLayoutRight = parseInt(options.buttonLayoutRight);
 	newOptions.splashMode = parseInt(options.splashMode);
 	newOptions.splashDuration = parseInt(options.splashDuration) * 1000; // seconds to milliseconds
+	newOptions.splashTextEnabled = parseInt(options.splashTextEnabled);
+	newOptions.splashTextFirst = parseInt(options.splashTextFirst);
+	newOptions.splashTextDuration = parseInt(options.splashTextDuration) * 1000; // seconds to milliseconds
+	newOptions.splashTextLineCount = parseInt(options.splashTextLineCount);
 	newOptions.displaySaverTimeout =
 		parseInt(options.displaySaverTimeout) * 60000; // minutes to milliseconds
 	newOptions.splashChoice = parseInt(options.splashChoice);
-
-	if (newOptions.buttonLayoutCustomOptions) {
-		newOptions.buttonLayoutCustomOptions.params.layout = parseInt(
-			options.buttonLayoutCustomOptions?.params?.layout,
-		);
-		newOptions.buttonLayoutCustomOptions.paramsRight.layout = parseInt(
-			options.buttonLayoutCustomOptions?.paramsRight?.layout,
-		);
-	}
 
 	delete newOptions.splashImage;
 	const url = !isPreview
 		? `${baseUrl}/api/setDisplayOptions`
 		: `${baseUrl}/api/setPreviewDisplayOptions`;
 	return Http.post(url, newOptions)
-		.then((response) => {
-			return true;
-		})
+		.then((response) => response.data?.success !== false)
 		.catch((err) => {
 			console.error(err);
 			return false;
@@ -674,6 +668,11 @@ async function getHETriggerVoltage(settings) {
 	return Http.post(`${baseUrl}/api/getHETriggerVoltage`, settings);
 }
 
+// GET the ADC reading for every scanned Hall Effect trigger (-1 when not scanned)
+async function getHETriggerVoltages() {
+	return Http.get(`${baseUrl}/api/getHETriggerVoltages`);
+}
+
 // POST function to set our channels, select, and ADC pin
 async function setHETriggerOptions(settings) {
 	return Http.post(`${baseUrl}/api/setHETriggerOptions`, settings);
@@ -794,6 +793,7 @@ export default {
 	getExpansionPins,
 	setExpansionPins,
 	getHETriggerVoltage,
+	getHETriggerVoltages,
 	setHETriggerCalibrations,
 	getHETriggerCalibrations,
 	setHETriggerOptions,

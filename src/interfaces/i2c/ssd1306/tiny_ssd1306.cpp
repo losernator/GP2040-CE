@@ -166,6 +166,10 @@ void GPGFX_TinySSD1306::drawPixel(uint8_t x, uint8_t y, uint32_t color) {
 }
 
 void GPGFX_TinySSD1306::drawText(uint8_t x, uint8_t y, std::string text, uint8_t invert) {
+	drawTextAt(x * _options.font.width, y * _options.font.height, text, invert);
+}
+
+void GPGFX_TinySSD1306::drawTextAt(uint16_t x, uint16_t y, std::string text, uint8_t invert) {
 	uint8_t spriteX, spriteY;
 	uint8_t spriteByte;
 	uint8_t spriteBit;
@@ -187,7 +191,7 @@ void GPGFX_TinySSD1306::drawText(uint8_t x, uint8_t y, std::string text, uint8_t
 				spriteByte = currGlyph[spriteX];
 				color = ((spriteByte >> spriteBit) & 0x01);
                 if (invert) color = !color;
-				drawPixel(((x*_options.font.width)+spriteX)+charOffset, (y*_options.font.height)+spriteY, color);
+				drawPixel((x+spriteX)+charOffset, y+spriteY, color);
 			}
 		}
 
@@ -557,11 +561,20 @@ void GPGFX_TinySSD1306::drawSprite(uint8_t* image, uint16_t width, uint16_t heig
 	uint8_t spriteX, spriteY;
 	uint8_t color;
 
-	for (uint16_t scaledY = 0; scaledY < height * scale; ++scaledY) {
-		for (uint16_t scaledX = 0; scaledX < width * scale; ++scaledX) {
-			spriteX = scaledX / scale;
-			spriteY = scaledY / scale;
-			
+	uint16_t scaledWidth = ceil(width * scale);
+	uint16_t scaledHeight = ceil(height * scale);
+	if (scaledWidth == 0 || scaledHeight == 0) return;
+
+	uint8_t spriteXs[scaledWidth];
+	for (uint16_t scaledX = 0; scaledX < scaledWidth; ++scaledX) {
+		spriteXs[scaledX] = scaledX / scale;
+	}
+
+	for (uint16_t scaledY = 0; scaledY < scaledHeight; ++scaledY) {
+		spriteY = scaledY / scale;
+		for (uint16_t scaledX = 0; scaledX < scaledWidth; ++scaledX) {
+			spriteX = spriteXs[scaledX];
+
 			spriteBit = spriteX % 8;
 			spriteByte = image[(spriteY * ((width + 7) / 8)) + (spriteX / 8)];
 			color = ((spriteByte >> (7 - spriteBit)) & 0x01);
